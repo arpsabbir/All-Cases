@@ -148,7 +148,6 @@ def user_ui():
         time.sleep(5)
         browser.close()
 
-
 if __name__ == '__main__':
     user_ui()
     video_download()
