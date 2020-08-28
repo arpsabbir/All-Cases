@@ -14,7 +14,7 @@ proxy = ['HTTP://125.108.84.103:9000', 'HTTP://118.126.107.41:8118', 'HTTP://113
          'HTTP://123.169.166.127:9999', 'HTTP://110.243.26.86:9999', 'HTTP://118.212.107.10:9999',
          'HTTP://58.211.134.98:38480']
 
-path = 'C:/Users/Hu.Sir/Desktop/Spider'
+path = './Spider'
 video_url = {}  # 搜索到的视频信息
 episodes_url = {}  # 视频下载地址
 episodes_urls = {}  # 分段视频链接
