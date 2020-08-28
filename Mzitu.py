@@ -25,7 +25,6 @@ def requests_url(url):
     except:
         print('链接请求失败！')
 
-
 def get_info(url):
     global ref_url
     page = []
@@ -41,7 +40,6 @@ def get_info(url):
             image_url = parsel.Selector(requests_url(URL).text).xpath('//p/a/img/@src').extract()
             download(file_name,image_url)
             time.sleep(random())
-
 
 def download(file_name, image_url):
     if os.path.exists(path + file_name[0]):
