@@ -9,7 +9,7 @@ from urllib.parse import unquote
 
 referer = 'http://agefans.org/'
 header = {
-    'Cookie': '__cfduid=d9216f203c70cad8785fd8f10dcf2fb5d1594952490; csrftoken=OBJWjqkshWbI1IGirAjQqa9IKy9KOBp9T1a16N6GrA5qTcTdc4azooNitiumjxYA',
+    'Cookie': '自行填写Cookies',
     'Host': 'agefans.org',
     'Referer': referer,
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36 Edg/84.0.522.40'
@@ -20,7 +20,7 @@ proxy = ['HTTP://113.195.225.104:9999', 'HTTP://110.243.6.125:9999', 'HTTP://58.
          'HTTP://110.243.31.141:9999', 'HTTP://125.108.84.103:9000', 'HTTP://120.83.101.89:9999',
          'HTTP://113.194.135.166:9999', 'HTTP://118.126.107.41:8118']
 
-path = 'C:/Users/Hu.Sir/Desktop/Spider'
+path = './Spider'
 video_url = {}  # 搜索到的视频信息
 episodes_url = {}  # 视频下载地址
 episodes_urls = {}  #分段视频链接
