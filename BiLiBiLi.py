@@ -1,15 +1,17 @@
 import json
+import os
 import random
 import re
 from urllib.parse import quote
 
+import parsel
 import requests
 
 ip_url = 'https://ip.jiangxianli.com/api/proxy_ip'
 r = requests.get(ip_url)
 proxy = {'HTTP': 'http://' + r.json()['data']['ip'] + ':' + r.json()['data']['port']}
 print(proxy)
-path = 'C:/Users/Jackson-art/Desktop/'
+path = './'
 
 
 class BiLiBiLi_phone():
@@ -71,8 +73,10 @@ class BiLiBiLi_api():
 
 
 class BiLiBiLi():
-    def __init__(self, s_url):
+    def __init__(self, s_url, name_num=0,flag=False):
         self.url = s_url
+        self.name_num = name_num
+        self.flag=flag
         self.header = {
             'Range': 'bytes=0-',
             'referer': self.url,
@@ -82,36 +86,99 @@ class BiLiBiLi():
         }
 
     def BL_download(self):
-        html = requests.get(self.url, headers=self.header).text
+        global v_name, rel_path, video_name
+        html = requests.get(self.url, proxies=proxy, headers=self.header).text
         json_data = re.findall('window.__playinfo__=(.*?)</script>', html)[0]
-        video_name=re.findall(',"title":"(.*?)","', html)[0]
-        if video_name == '':
-            video_name = int(random.random() * 2 * 1000)
-        if len(str(video_name)) > 20:
-            video_name = video_name[:20]
+        video_name = re.findall(',"title":"(.*?)","', html)[0].replace('（', '(').replace('）', ')').replace(' ', '_')
+        if self.flag:
+            video_temp_name = re.findall('","part":"(.*?)","', html)[int(self.name_num) - 1].replace(' ', '_')
+            rel_path = path + video_name + '/'
+            v_name = video_temp_name
+            if os.path.exists(rel_path):
+                pass
+            else:
+                os.mkdir(rel_path)
+        else:
+            rel_path = path
+            v_name = video_name
         video = json.loads(json_data)['data']['dash']['video'][0]['baseUrl']
-        self.download(video,path+video_name+'.flv')
-        print("【BiLiBiLi】: {} 视频下载完成！".format(video_name))
+        self.download(video, rel_path + v_name + '.m4s')
+        print("【BiLiBiLi】: {} 视频下载完成！".format(v_name))
         audio = json.loads(json_data)['data']['dash']['audio'][0]['baseUrl']
-        self.download(audio, path + video_name + '.mp3')
-        print("【BiLiBiLi】: {} 音频下载完成！".format(video_name))
+        self.download(audio, rel_path + v_name + '-1.m4s')
+        print("【BiLiBiLi】: {} 音频下载完成！".format(v_name))
 
-    def download(self,url,rel_path):
-        r = requests.get(url, headers=self.header)
+    def download(self, url, rel_path):
+        r = requests.get(url,headers=self.header)
         with open(rel_path, 'wb')as f:
             f.write(r.content)
+
+
+def video_add_mp3(ffmpeg_path, save_path, m4s_file1_path, m4s_file2_path):
+    """
+    ffmpeg -i video.mp4 -i audio.m4a -c:v copy -c:a copy output.mp4
+     视频添加音频
+    :param ffmpeg_path: ffmpeg的安装 bin 路径
+    :param save_path: 文件保存路径
+    :param m4s_file1_path: 传入视频频文件的路径
+    :param m4s_file2_path: 传入音频文件的路径
+    :return:
+    """
+    mp4_name = m4s_file1_path.split('/')[-1].split('.m4s')[0] + '-temp.mp4'
+    mp3_name = m4s_file1_path.split('/')[-1].split('.m4s')[0] + '-temp.mp3'
+    outfile_name = m4s_file1_path.split('.m4s')[0] + '.mp4'
+    os.system(r'%sffmpeg -i %s %s' % (ffmpeg_path, m4s_file1_path, save_path + mp4_name))
+    os.system(r'%sffmpeg -i %s %s' % (ffmpeg_path, m4s_file2_path, save_path + mp3_name))
+    os.system(r'%sffmpeg -i %s -i %s -c:v copy -c:a copy %s' % (
+        ffmpeg_path, save_path + mp4_name, save_path + mp3_name, outfile_name))
+    os.remove(save_path + mp4_name)
+    os.remove(save_path + mp3_name)
+    os.remove(m4s_file1_path)
+    os.remove(m4s_file2_path)
+
 
 def user_ui():
     print('*' * 10 + '\t BiLiBiLi视频下载\t' + '*' * 10)
     print('*' * 5 + "\t\tAuthor:  高智商白痴\t\t" + '*' * 5)
-    share_url = input('请输入分享链接: ')
-    choice = int(input("1、模拟手机端下载  2、调用接口下载  3、直接下载\n选择下载方式："))
-    if choice == 1:
-        BiLiBiLi_phone(share_url).bili_Download()
-    if choice == 2:
-        BiLiBiLi_api(share_url).BL_api_Download()
-    if choice == 3:
-        BiLiBiLi(share_url).BL_download()
+    choice1 = int(input("1、单个视频下载  2、多个视频下载  \n选择下载类型："))
+    share_url = input('请输入链接: ')
+    choice2 = int(input("1、模拟手机端下载  2、调用接口下载  3、直接下载\n选择下载方式："))
+    if choice1 == 1:
+        if choice2 == 1:
+            BiLiBiLi_phone(share_url).bili_Download()
+        if choice2 == 2:
+            BiLiBiLi_api(share_url).BL_api_Download()
+        if choice2 == 3:
+            BiLiBiLi(share_url).BL_download()
+    if choice1 == 2:
+        v_url = share_url.split('?')[0]
+        v_num = parsel.Selector(
+            requests.get(share_url, proxies=proxy,
+                         headers={'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}).text).xpath(
+            '//span[@class="cur-page"]/text()').extract()[0].split('/')[-1]
+        video_list = ['{}?p={}'.format(v_url, i) for i in range(1, int(v_num) + 1)]
+        if choice2 == 1:
+            for url in video_list:
+                BiLiBiLi_phone(url).bili_Download()
+        if choice2 == 2:
+            for url in video_list:
+                BiLiBiLi_api(url).BL_api_Download()
+        if choice2 == 3:
+            for url in video_list:
+                num = int(url.split('=')[-1])
+                print(num)
+                BiLiBiLi(url, num,True).BL_download()
+                video_add_mp3('D:/Installed/ffmpeg-2020-09-30-essentials_build/bin/', rel_path,
+                              rel_path + v_name + '.m4s',
+                              rel_path + v_name + '-1.m4s')
+                msg(v_name)
+    msg(video_name)
+
+
+def msg(name):
+    url = 'https://qmsg.zendee.cn/send/***********************?msg=' + quote(name + ': 下载成功！')
+    r = requests.get(url)
+    print(r.json()['reason'])
 
 
 if __name__ == '__main__':
